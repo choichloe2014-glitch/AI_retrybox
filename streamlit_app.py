@@ -5,7 +5,7 @@ st.set_page_config(page_title="AI Retry Box")
 ### save a mistake card, save button, list of saved cards.
 
 
-box_name = typed_name.strip().lower()
+
 
 
 def name_error(name):
@@ -24,6 +24,8 @@ typed_name = st.sidebar.text_input(
     max_chars = 20,
     placeholder = "e.g. Jiyoung"
 )
+
+box_name = typed_name.strip().lower()
 
 if box_name=="":
     st.title("AI Retry Box")

@@ -7,5 +7,6 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv data/
+.venv 
+data/
 .streamlit/secrets.toml

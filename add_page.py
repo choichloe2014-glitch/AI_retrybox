@@ -10,34 +10,6 @@ SUBJECTS = ["Math", "Science", "English", "Other"]
 
 FORM_KEYS = ["question", "my_answer", "correct_answer", "note"]
 
-st.title("Add a mistake")
-
-with st.form("new_card"):
-    st.selectbox("Subject", SUBJECTS, key="subject")
-    st.text_area("Question", key="question", placeholder="Copy the problem you got wrong.")
-    left, right = st.columns(2)
-    with left:
-        st.text_input("My answer", key="my_answer", placeholder="What did you write?")
-    with right:
-        st.text_input("Correct answer", key="correct_answer", placeholder="What is the right answer?")
-    st.text_input("Note (optional)", key="note", placeholder="Why do you think you got it wrong?")
-    st.form_submit_button("Save card", type="primary", on_click=save_new_card, width="stretch")
-
-box_name = st.session_state["box_name"]
-
-cards = load_cards(box_name)
-
-st.subheader(f"My mistake cards  ({len(cards)})")
-
-# pop() so the message is shown only once.
-feedback = st.session_state.pop("form_feedback", None)
-if feedback is not None:
-    kind, message = feedback
-    if kind == "error":
-        st.error(message)
-    else:
-        st.success(message)
-
 
 def form_error(question, my_answer, correct_answer):
     """Return an error message for invalid input, otherwise None.
@@ -88,6 +60,7 @@ def save_new_card():
 
     for key in FORM_KEYS:
         # Clear the form inputs after saving a card. Give feedback to the user that the card was saved successfully.
+        st.session_state[key] = ""
     st.session_state["form_feedback"] = ("success", "Saved! Your card is in the list below.")
 
 
@@ -100,12 +73,12 @@ def delete_card(card_id):
     remaining = [card for card in cards if card["id"] != card_id]
     save_cards(box_name, remaining)
 
-    def show_card(card):
-        """Show a card in the list of saved cards.
-        The card is shown in a container with a border, with the subject and date at the top, the question in the middle, and the user's answer and the correct answer at the bottom.
-        The user can delete the card by clicking the delete button, which shows a popover asking for confirmation."""
-        with st.container(border=True):
-            left, right = st.columns([5, 1], vertical_alignment="center")
+def show_card(card):
+    """Show a card in the list of saved cards.
+    The card is shown in a container with a border, with the subject and date at the top, the question in the middle, and the user's answer and the correct answer at the bottom.
+    The user can delete the card by clicking the delete button, which shows a popover asking for confirmation."""
+    with st.container(border=True):
+        left, right = st.columns([5, 1], vertical_alignment="center")
         with left:
             st.badge(card["subject"], color="orange")
             st.caption(card["created_at"])
@@ -135,6 +108,12 @@ def delete_card(card_id):
             st.caption("Note")
             st.text(card["note"])
 
+box_name = st.session_state["box_name"]
+cards = load_cards(box_name)
+st.subheader(f"My mistake cards  ({len(cards)})")
+
+st.title("Add a mistake")
+
 with st.form("new_card"):
     st.selectbox("Subject", SUBJECTS, key="subject")
     st.text_area("Question", key="question", placeholder="Copy the problem you got wrong.")
@@ -144,21 +123,23 @@ with st.form("new_card"):
     with right:
         st.text_input("Correct answer", key="correct_answer", placeholder="What is the right answer?")
     st.text_input("Note (optional)", key="note", placeholder="Why do you think you got it wrong?")
-    st.form_submit_button("Save card", type="primary", on_click=save_new_card, width="stretch")
+    st.form_submit_button("Save Cards", type="primary", on_click=save_new_card, width="stretch")
 
-    feedback = st.session_state.pop("form_feedback", None)
-    if feedback is not None:
-        kind, message = feedback
-        if kind == "error":
-            st.error(message)
-        else:
-            st.success(message)
 
-    cards = load_cards(box_name)
+st.subheader(f"My mistake cards  ({len(cards)})")
+if len(cards) == 0:
+    st.info("No mistake cards yet. Add the first one above.")
 
-    st.subheader(f"My mistake cards  ({len(cards)})")
-    if len(cards) == 0:
-        st.info("No mistake cards yet. Add the first one above.")
+for card in cards:
+    show_card(card)
 
-    for card in cards:
-        show_card(card)
+# pop() so the message is shown only once.
+feedback = st.session_state.pop("form_feedback", None)
+if feedback is not None:
+    kind, message = feedback
+    if kind == "error":
+        st.error(message)
+    else:
+        st.success(message)
+
+
