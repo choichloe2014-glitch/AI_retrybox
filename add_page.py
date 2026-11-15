@@ -3,7 +3,8 @@ import streamlit as st
 import uuid
 from datetime import date
 
-from card_store import load_cards, save_cards
+from ai_check import check_mistake, AiError
+from card_store import load_cards, save_cards, update_card
 
 
 SUBJECTS = ["Math", "Science", "English", "Other"]
@@ -63,6 +64,15 @@ def save_new_card():
         st.session_state[key] = ""
     st.session_state["form_feedback"] = ("success", "Saved! Your card is in the list below.")
 
+    # check it below the form, so the spinner shows in the right place.
+    st.session_state["pending_check"] = card["id"]
+
+def run_check(card):
+    use_ai = st.session_state.get("use_ai", False)
+    card["ai"] = check_mistake(card, use_ai)
+    update_card(st.session_state["box_name"], card)
+
+
 
 def delete_card(card_id):
     """Callback for [Yes, delete].
@@ -107,9 +117,45 @@ def show_card(card):
         if card["note"] != "":
             st.caption("Note")
             st.text(card["note"])
+def show_ai_part(card):
+    ai = card.get("ai") #
+
+    if ai is not None:
+        st.divider()
+        st.badge(ai["mistake_type"], icon=":material/psycology", color="blue")
+        if ai["source"] == "ai":
+            st.caption("Hint (AI diagnosis")
+        else:
+            st.caption("Hint (rule-based guess)")
+            st.text(ai["hint"])
+            if ai["twin_question"] == "":
+                st.caption("Twin problems need the AI.")
+    else:
+        with st.expander("Twin problem"):
+            st.text(ai["twin_question"])
+            st.caption("Answer")
+            st.text(ai["twin_answer"])
+
+    if not st.session_state.get("use_ai",False):
+            label = "Check with rules"
+    else:
+            label = "Check with AI"
+        
+    if st.button(label, key=f"check_{card['id']}", icon=":material/auto_awesome:", type="tertiary"):
+        with st.spinner("Checking this mistake..."):
+            try:
+                run_check(card)
+            except AiError as error:
+                st.warning(f"The AI check failed. {error}")
+                return
+        st.rerun()
+        
 
 box_name = st.session_state["box_name"]
+
+
 cards = load_cards(box_name)
+
 st.subheader(f"My mistake cards  ({len(cards)})")
 
 st.title("Add a mistake")
@@ -125,14 +171,6 @@ with st.form("new_card"):
     st.text_input("Note (optional)", key="note", placeholder="Why do you think you got it wrong?")
     st.form_submit_button("Save Cards", type="primary", on_click=save_new_card, width="stretch")
 
-
-st.subheader(f"My mistake cards  ({len(cards)})")
-if len(cards) == 0:
-    st.info("No mistake cards yet. Add the first one above.")
-
-for card in cards:
-    show_card(card)
-
 # pop() so the message is shown only once.
 feedback = st.session_state.pop("form_feedback", None)
 if feedback is not None:
@@ -141,5 +179,24 @@ if feedback is not None:
         st.error(message)
     else:
         st.success(message)
+
+
+
+pending_id = st.session_state.pop("pending_check", None)
+for card in cards:
+    if card["id"] == pending_id:
+        with st.spinner("Checking this mistake..."):
+            try:
+                run_check(card)
+            except AiError as error:
+                st.warning(f"Your card was saved, but the AI check failed. {error}")
+
+st.subheader(f"My mistake cards  ({len(cards)})")
+if len(cards) == 0:
+    st.info("No mistake cards yet. Add the first one above.")
+
+for card in cards:
+    show_card(card)
+
 
 

@@ -1,6 +1,7 @@
 import json
+from streamlit.errors import StreamlitSecretNotFoundError
 
-from grog import Grog
+from groq import Groq
 
 from rule_check import guess_mistake
 
@@ -20,7 +21,6 @@ Reply in JSON with the following format:
 """
 class AiError(Exception):
     pass
-
 def ask_ai(api_key, instructions, prompt, keys):
     """
     Ask the AI for a response based on the instructions and prompt."""
@@ -51,21 +51,30 @@ def ask_ai(api_key, instructions, prompt, keys):
     result["source"] = "ai"
     return result
 
-def check_mistake(card, api_key):
+
+def get_api_key():
+    try:
+        return st.secrets["GROQ_API_KEY"]
+    except StreamlitSecretNotFoundError:
+        return ""
+
+def check_mistake(card, use_ai: bool = True):
    """ Check the mistake type and provide a hint based on the
      card's note and answers. If an API key is provided, use the AI to determine the mistake type.
      Otherwise, use the rule-based method."""
-   if api_key == "":
+   api_key = get_api_key() if use_ai else ""
+   if not use_ai or api_key == "":
         return guess_mistake(card)
-
-    note = card["note"]
-if note == "":
+   
+   note = card["note"]
+   
+   if note == "":
     note = "(none)"
     prompt = f"""Subject: {card['subject']}
-Problem: {card['question']}
-Student's answer: {card['my_answer']}
-Correct answer: {card['correct_answer']}
-Student's note: {note}"""
+    Problem: {card['question']}
+    Student's answer: {card['my_answer']}
+    Correct answer: {card['correct_answer']}
+    Student's note: {note}"""
 
     keys = ["mistake_type", "hint", "twin_question", "twin_answer"]
     result = ask_ai(api_key, CHECK_INSTRUCTIONS, prompt, keys)
