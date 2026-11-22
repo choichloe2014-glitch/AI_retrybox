@@ -50,11 +50,12 @@ st.sidebar.caption(f"Your cards are saved in data/{box_name}.json")
 
 groq_key = read_secret("GROQ_API_KEY", "")
 groq_model = read_secret("GROQ_MODEL", "")
+
 if groq_key == "" or groq_model == "":
     use_ai = False
     st.sidebar.warning("The AI is off, so simple rules check your mistakes. To turn on the AI, add your GROQ_API_KEY and GROQ_MODEL to secrets.toml.")
 else:
-    use_ai = st.sidebar.toggle("Use AI", value=True, key ="use_ai")
+    use_ai = st.sidebar.toggle("Use AI", value=True, key ="ai_switch")
 
 st.session_state["use_ai"] = use_ai
 

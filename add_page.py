@@ -26,8 +26,6 @@ def form_error(question, my_answer, correct_answer):
         return "Your answer is the same as the correct answer. This is not a mistake!"
     return None
 
-form_error("","","")
-
 def save_new_card():
     """Callback for[Save card]. Validates the form, saves the card, and resets for inputs before redraw."
     It runs before page is redrawn, which is the only time the inputs can be cleared from code.
@@ -117,24 +115,27 @@ def show_card(card):
         if card["note"] != "":
             st.caption("Note")
             st.text(card["note"])
+
+        show_ai_part(card)
+        
 def show_ai_part(card):
     ai = card.get("ai") #
 
     if ai is not None:
         st.divider()
-        st.badge(ai["mistake_type"], icon=":material/psycology", color="blue")
+        st.badge(ai["mistake_type"], icon=":material/psychology:", color="blue")
         if ai["source"] == "ai":
-            st.caption("Hint (AI diagnosis")
+            st.caption("Hint (AI diagnosis)")
         else:
             st.caption("Hint (rule-based guess)")
-            st.text(ai["hint"])
-            if ai["twin_question"] == "":
+        st.text(ai["hint"])
+        if ai["twin_question"] == "":
                 st.caption("Twin problems need the AI.")
-    else:
-        with st.expander("Twin problem"):
-            st.text(ai["twin_question"])
-            st.caption("Answer")
-            st.text(ai["twin_answer"])
+        else:
+            with st.expander("Twin problem"):
+                st.text(ai["twin_question"])
+                st.caption("Answer")
+                st.text(ai["twin_answer"])
 
     if not st.session_state.get("use_ai",False):
             label = "Check with rules"

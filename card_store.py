@@ -1,12 +1,3 @@
-card = {
-    "id": "3f9a1c2e",
-    "subject": "Math",
-    "question": "A shirt costs 20 dollars. It is 15% off. What is the new price?",
-    "my_answer": "3 dollars",
-    "correct_answer": "17 dollars",
-    "note": "I found the discount, not the new price.",
-    "created_at": "2026-10-18",
-}
 
 import json
 from pathlib import Path
